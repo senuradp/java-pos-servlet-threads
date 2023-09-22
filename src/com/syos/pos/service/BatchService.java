@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  *
@@ -25,7 +23,6 @@ import java.util.concurrent.Executors;
 public class BatchService implements IBatchService{
 
     private IBatchRepository batchRepositoryDAO = (IBatchRepository) RepositoryFactory.getInstance().getDAO(RepositoryFactory.RepositoryType.BATCH);
-    private final ExecutorService executorService = Executors.newFixedThreadPool(10);  // 10 threads in the pool
 
     @Override
     public boolean add(BatchDTO batchDTO) {
@@ -42,7 +39,7 @@ public class BatchService implements IBatchService{
             return batchRepositoryDAO.add(batch);
 
         }catch (Exception ex) {
-            Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
+             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
     }
@@ -63,7 +60,7 @@ public class BatchService implements IBatchService{
             return batchRepositoryDAO.update(batch);
 
         }catch (Exception ex) {
-            Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
+             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
 
@@ -77,7 +74,7 @@ public class BatchService implements IBatchService{
             return batchRepositoryDAO.delete(code);
 
         }catch (Exception ex) {
-            Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
+             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
 
@@ -85,6 +82,7 @@ public class BatchService implements IBatchService{
 
     @Override
     public List<BatchDTO> getAll() throws Exception {
+
         try{
             List<Batch> allBatches = batchRepositoryDAO.getAll();
             List<BatchDTO> allBatchDTOs = new ArrayList<>();
@@ -97,15 +95,17 @@ public class BatchService implements IBatchService{
                 batchDTO.setBatch_qty(batch.getBatch_qty());
                 batchDTO.setAvailable_qty(batch.getAvailable_qty());
                 batchDTO.setIs_sold(batch.getIs_sold());
-        }
-        catch (Exception ex) {
-                Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
+
+                allBatchDTOs.add(batchDTO);
+
             }
-        };
+            return allBatchDTOs;
+        }catch (Exception ex) {
+             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
-        executorService.submit(task);
+        return null;
 
-        return allBatchDTOs;  // You may need to update this part
     }
 
     @Override
