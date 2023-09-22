@@ -32,11 +32,13 @@ import java.util.ArrayList;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class BatchGUIService {
 
     private final Gson gson = new Gson();
-
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5);  // 5 threads in the pool
 
     public String add(String batchCode, String productCode, String expiryDate, String purchaseDate, double batchQty, double availableQty, boolean isSold) {
         BatchController batchController = new BatchController();
@@ -72,8 +74,6 @@ public class BatchGUIService {
         }
     }
 
-
-
     public String update(String batchCode, String productCode, String expiryDate, String purchaseDate, double batchQty, double availableQty, boolean isSold) {
         BatchController batchController = new BatchController();
         BatchDTO batchDTO = new BatchDTO();
@@ -107,7 +107,6 @@ public class BatchGUIService {
             return "Failed to updated batch.";
         }
     }
-
 
     public String delete(String batchCode) {
         try {
@@ -175,38 +174,40 @@ public class BatchGUIService {
         customGson = gsonBuilder.create();
     }
     public List<BatchDTO> getAll() {
-        try {
-            // Replace the URL with the correct URL for your BatchController servlet
-            URL url = new URL("http://localhost:8080/syosposclientserver/BatchController?action=getAll");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
+        List<BatchDTO> result = new ArrayList<>();
+        Runnable task = () -> {
+            try {
+                // Replace the URL with the correct URL for your BatchController servlet
+                URL url = new URL("http://localhost:8080/syosposclientserver/BatchController?action=getAll");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
 
-            int responseCode = conn.getResponseCode();
-            if (responseCode == 200) {
-                BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                String line;
-                StringBuilder responseText = new StringBuilder();
+                int responseCode = conn.getResponseCode();
+                if (responseCode == 200) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                    String line;
+                    StringBuilder responseText = new StringBuilder();
 
-                while ((line = in.readLine()) != null) {
-                    responseText.append(line);
+                    while ((line = in.readLine()) != null) {
+                        responseText.append(line);
+                    }
+                    in.close();
+
+                    // Convert JSON response to List<BatchDTO>
+                    Type listType = new TypeToken<List<BatchDTO>>() {}.getType();
+                    result.addAll(customGson.fromJson(responseText.toString(), listType));
+                } else {
+                    // Handle the error response if needed
+                    Logger.getLogger(BatchGUIService.class.getName()).log(Level.SEVERE, "HTTP request failed with response code: " + responseCode);
                 }
-                in.close();
-
-                // Convert JSON response to List<BatchDTO>
-                Type listType = new TypeToken<List<BatchDTO>>() {}.getType();
-                return customGson.fromJson(responseText.toString(), listType);
-
-            } else {
-                // Handle the error response if needed
-                Logger.getLogger(BatchGUIService.class.getName()).log(Level.SEVERE, "HTTP request failed with response code: " + responseCode);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Logger.getLogger(BatchGUIService.class.getName()).log(Level.SEVERE, null, e);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            Logger.getLogger(BatchGUIService.class.getName()).log(Level.SEVERE, null, e);
-        }
+        };
 
-        // Return an empty list or handle the error as needed
-        return new ArrayList<>();
+        executorService.submit(task);
+        return result;  // Note: This will likely return before task is completed
     }
 
     public String[] getByCode(String batchCode) {
