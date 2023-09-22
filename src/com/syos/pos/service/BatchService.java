@@ -15,14 +15,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  *
  * @author senu2k
  */
 public class BatchService implements IBatchService{
-    
+
     private IBatchRepository batchRepositoryDAO = (IBatchRepository) RepositoryFactory.getInstance().getDAO(RepositoryFactory.RepositoryType.BATCH);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);  // 10 threads in the pool
 
     @Override
     public boolean add(BatchDTO batchDTO) {
@@ -35,18 +38,18 @@ public class BatchService implements IBatchService{
             batch.setBatch_qty(batchDTO.getBatch_qty());
             batch.setAvailable_qty(batchDTO.getAvailable_qty());
             batch.setIs_sold(batchDTO.getIs_sold());
-            
+
             return batchRepositoryDAO.add(batch);
-            
+
         }catch (Exception ex) {
-             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
     }
 
     @Override
     public boolean update(BatchDTO batchDTO) {
-        
+
         try{
             Batch batch = new Batch();
             batch.setBatch_code(batchDTO.getBatch_code());
@@ -56,33 +59,32 @@ public class BatchService implements IBatchService{
             batch.setBatch_qty(batchDTO.getBatch_qty());
             batch.setAvailable_qty(batchDTO.getAvailable_qty());
             batch.setIs_sold(batchDTO.getIs_sold());
-            
+
             return batchRepositoryDAO.update(batch);
-            
+
         }catch (Exception ex) {
-             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
-       
+
     }
 
     @Override
     public boolean delete(String code) throws Exception {
-        
+
         try{
-            
+
             return batchRepositoryDAO.delete(code);
-            
+
         }catch (Exception ex) {
-             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
-        
+
     }
 
     @Override
     public List<BatchDTO> getAll() throws Exception {
-        
         try{
             List<Batch> allBatches = batchRepositoryDAO.getAll();
             List<BatchDTO> allBatchDTOs = new ArrayList<>();
@@ -95,25 +97,23 @@ public class BatchService implements IBatchService{
                 batchDTO.setBatch_qty(batch.getBatch_qty());
                 batchDTO.setAvailable_qty(batch.getAvailable_qty());
                 batchDTO.setIs_sold(batch.getIs_sold());
-
-                allBatchDTOs.add(batchDTO);
-
-            }
-            return allBatchDTOs;
-        }catch (Exception ex) {
-             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        return null;
-        
+        catch (Exception ex) {
+                Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        };
+
+        executorService.submit(task);
+
+        return allBatchDTOs;  // You may need to update this part
     }
 
     @Override
-    public boolean checkBatchCodeExists(String batch_code) throws Exception {    
+    public boolean checkBatchCodeExists(String batch_code) throws Exception {
         try{
-            
+
             return batchRepositoryDAO.checkBatchCodeExists(batch_code);
-            
+
         }catch (Exception ex) {
             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -132,7 +132,7 @@ public class BatchService implements IBatchService{
             batchDTO.setBatch_qty(batch.getBatch_qty());
             batchDTO.setAvailable_qty(batch.getAvailable_qty());
             batchDTO.setIs_sold(batch.getIs_sold());
-            
+
             return batchDTO;
         }catch (Exception ex) {
             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
@@ -140,7 +140,7 @@ public class BatchService implements IBatchService{
         return null;
     }
 
-   
+
 
     // @Override
     // public boolean updateBatchQty(String product_code, double qty) throws Exception {
@@ -154,12 +154,12 @@ public class BatchService implements IBatchService{
 
     @Override
     public List<BatchDTO> getExpiringBatchDetails(String product_code) {
-        
+
         List<BatchDTO> resultDTO = new ArrayList<BatchDTO>();
-        
+
         try{
             List<Batch> result = batchRepositoryDAO.getExpiringBatchDetails(product_code);
-            
+
             for(int i=0; i<result.size(); i++){
                 Batch batch = result.get(i);
                 BatchDTO batchDTO = new BatchDTO();
@@ -170,17 +170,17 @@ public class BatchService implements IBatchService{
                 batchDTO.setBatch_qty(batch.getBatch_qty());
                 batchDTO.setAvailable_qty(batch.getAvailable_qty());
                 batchDTO.setIs_sold(batch.getIs_sold());
-                
+
                 resultDTO.add(batchDTO);
-                
+
             }
-            
+
         }catch(Exception ex){
             Logger.getLogger(BatchRepository.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return resultDTO;
-        
+
     }
-    
+
 }
