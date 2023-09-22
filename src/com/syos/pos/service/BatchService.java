@@ -84,9 +84,9 @@ public class BatchService implements IBatchService{
     public List<BatchDTO> getAll() throws Exception {
         
         try{
-            List<Batch> allBatchs = batchRepositoryDAO.getAll();
+            List<Batch> allBatches = batchRepositoryDAO.getAll();
             List<BatchDTO> allBatchDTOs = new ArrayList<>();
-            for (Batch batch : allBatchs) {
+            for (Batch batch : allBatches) {
                 BatchDTO batchDTO = new BatchDTO();
                 batchDTO.setBatch_code(batch.getBatch_code());
                 batchDTO.setPurchase_date(batch.getPurchase_date());
