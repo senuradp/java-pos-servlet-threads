@@ -42,19 +42,37 @@ public class BatchGetAllGUI {
         JButton btnGetAllBatches = new JButton("Get All Batches");
         btnGetAllBatches.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                List<BatchDTO> batches = batchService.getAll();
-                StringBuilder sb = new StringBuilder();
-                for (BatchDTO batch : batches) {
-                    sb.append("Batch Code: ").append(batch.getBatch_code()).append("\n");
-                    sb.append("Product Code: ").append(batch.getProduct_code()).append("\n");
-                    sb.append("Batch Quantity: ").append(batch.getBatch_qty()).append("\n");
-                    sb.append("Expiry Date: ").append(dateFormat.format(batch.getExpiry_date())).append("\n");
-                    sb.append("Purchase Date: ").append(dateFormat.format(batch.getPurchase_date())).append("\n");
-                    sb.append("Available Quantity: ").append(batch.getAvailable_qty()).append("\n");
-                    sb.append("Is Sold: ").append(batch.getIs_sold()).append("\n");
-                    sb.append("-----------------\n");
-                }
-                textArea.setText(sb.toString());
+                // Disable the button during the retrieval process
+                btnGetAllBatches.setEnabled(false);
+
+//              to perform the retrieval task in the background and update the UI when it's done. This will prevent the UI from freezing during the operation.
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        List<BatchDTO> batches = batchService.getAll();
+                        StringBuilder sb = new StringBuilder();
+                        for (BatchDTO batch : batches) {
+                            sb.append("Batch Code: ").append(batch.getBatch_code()).append("\n");
+                            sb.append("Product Code: ").append(batch.getProduct_code()).append("\n");
+                            sb.append("Batch Quantity: ").append(batch.getBatch_qty()).append("\n");
+                            sb.append("Expiry Date: ").append(dateFormat.format(batch.getExpiry_date())).append("\n");
+                            sb.append("Purchase Date: ").append(dateFormat.format(batch.getPurchase_date())).append("\n");
+                            sb.append("Available Quantity: ").append(batch.getAvailable_qty()).append("\n");
+                            sb.append("Is Sold: ").append(batch.getIs_sold()).append("\n");
+                            sb.append("-----------------\n");
+                        }
+                        textArea.setText(sb.toString());
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        // Re-enable the button after retrieval is complete
+                        btnGetAllBatches.setEnabled(true);
+                    }
+                };
+
+                worker.execute();
             }
         });
         frame.getContentPane().add(btnGetAllBatches, BorderLayout.NORTH);

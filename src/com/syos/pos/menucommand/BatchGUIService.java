@@ -34,6 +34,7 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class BatchGUIService {
 
@@ -175,7 +176,8 @@ public class BatchGUIService {
     }
     public List<BatchDTO> getAll() {
         List<BatchDTO> result = new ArrayList<>();
-        Runnable task = () -> {
+
+        Future<List<BatchDTO>> future = executorService.submit(() -> {
             try {
                 // Replace the URL with the correct URL for your BatchController servlet
                 URL url = new URL("http://localhost:8080/syosposclientserver/BatchController?action=getAll");
@@ -204,10 +206,16 @@ public class BatchGUIService {
                 e.printStackTrace();
                 Logger.getLogger(BatchGUIService.class.getName()).log(Level.SEVERE, null, e);
             }
-        };
 
-        executorService.submit(task);
-        return result;  // Note: This will likely return before task is completed
+            return result;
+        });
+
+        try {
+            return future.get(); // This will block until the task is completed
+        } catch (Exception e) {
+            e.printStackTrace();
+            return result;
+        }
     }
 
     public String[] getByCode(String batchCode) {
