@@ -59,7 +59,7 @@ public class BatchController extends HttpServlet {
     }
 
     @Override
-    protected synchronized void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String action = request.getParameter("action");
 
