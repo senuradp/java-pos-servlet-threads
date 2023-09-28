@@ -31,6 +31,8 @@ public class OrderAddGUI extends JFrame {
     private JTextField discountField;
     private JTextArea orderSummaryArea;
 
+    private JButton addProductButton;
+
     private ProductGUIService productGUIService;
     private OrderService orderService;
 
@@ -54,7 +56,7 @@ public class OrderAddGUI extends JFrame {
         discountField = new JTextField(10);
         orderSummaryArea = new JTextArea(10, 30);
 
-        JButton addProductButton = new JButton("Add Product");
+        addProductButton = new JButton("Add Product");
         JButton checkoutButton = new JButton("Checkout");
 
         // Create action listeners for buttons
@@ -127,6 +129,7 @@ public class OrderAddGUI extends JFrame {
 
     private void checkout() {
         try {
+            addProductButton.setEnabled(false);
             String paymentType = paymentTypeField.getText();
             double customerAmount = Double.parseDouble(customerAmountField.getText());
             double discount = Double.parseDouble(discountField.getText());
