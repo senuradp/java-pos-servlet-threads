@@ -68,24 +68,38 @@ public class BatchAddGUI extends JFrame {
         addBatchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the input values from the GUI
-                String batchCode = batchCodeField.getText();
-                String productCode = productCodeField.getText();
-                String expiryDate = expiryDateField.getText();
-                String purchaseDate = purchaseDateField.getText();
-                double batchQty = Double.parseDouble(batchQtyField.getText());
-                double availableQty = Double.parseDouble(availableQtyField.getText());
-                boolean isSold = isSoldComboBox.getSelectedItem().equals("Yes");
+                addBatchButton.setEnabled(false);
 
-                // Call the batch service to add the batch
-                String result = batchService.add(batchCode, productCode, expiryDate, purchaseDate, batchQty, availableQty, isSold);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        String batchCode = batchCodeField.getText();
+                        String productCode = productCodeField.getText();
+                        String expiryDate = expiryDateField.getText();
+                        String purchaseDate = purchaseDateField.getText();
+                        double batchQty = Double.parseDouble(batchQtyField.getText());
+                        double availableQty = Double.parseDouble(availableQtyField.getText());
+                        boolean isSold = isSoldComboBox.getSelectedItem().equals("Yes");
 
-                // Display the result in the GUI
-                resultArea.setText(result);
+                        String result = batchService.add(batchCode, productCode, expiryDate, purchaseDate, batchQty, availableQty, isSold);
+
+                        SwingUtilities.invokeLater(() -> {
+                            resultArea.setText(result);
+                        });
+
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        addBatchButton.setEnabled(true);
+                    }
+                };
+
+                worker.execute();
             }
         });
 
-        // Result area to display the output
         resultArea = new JLabel();
 
         // Batch Code

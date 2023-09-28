@@ -96,42 +96,49 @@ public class BatchUpdateGUI extends JFrame {
         updateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the updated input values
-                String updatedBatchCode = batchCodeField.getText();
-                String updatedProductCode = productCodeField.getText();
-                String updatedExpiryDate = expiryDateField.getText();
-                String updatedPurchaseDate = purchaseDateField.getText();
-                String updatedBatchQty = batchQtyField.getText();
-                String updatedAvailableQty = availableQtyField.getText();
-                boolean updatedIsSold = isSoldCheckBox.isSelected();
+                updateButton.setEnabled(false);
 
-                // Validate the input
-                if (updatedBatchCode.isEmpty() || updatedProductCode.isEmpty() || updatedExpiryDate.isEmpty() || updatedPurchaseDate.isEmpty() || updatedBatchQty.isEmpty() || updatedAvailableQty.isEmpty()) {
-                    resultArea.setText("Please fill in all fields.");
-                } else {
-                    try {
-                        // Parse batchQty and availableQty as doubles
-                        double batchQty = Double.parseDouble(updatedBatchQty);
-                        double availableQty = Double.parseDouble(updatedAvailableQty);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        try {
+                            String updatedBatchCode = batchCodeField.getText();
+                            String updatedProductCode = productCodeField.getText();
+                            String updatedExpiryDate = expiryDateField.getText();
+                            String updatedPurchaseDate = purchaseDateField.getText();
+                            double batchQty = Double.parseDouble(batchQtyField.getText());
+                            double availableQty = Double.parseDouble(availableQtyField.getText());
+                            boolean updatedIsSold = "Yes".equals(isSoldComboBox.getSelectedItem().toString());
 
-                        // Call the service to update the batch
-                        String result = batchService.update(updatedBatchCode, updatedProductCode, updatedExpiryDate, updatedPurchaseDate, batchQty, availableQty, updatedIsSold);
+                            String result = batchService.update(updatedBatchCode, updatedProductCode, updatedExpiryDate, updatedPurchaseDate, batchQty, availableQty, updatedIsSold);
 
-                        // Display the result in the GUI
-                        resultArea.setText(result);
-                    } catch (NumberFormatException ex) {
-                        resultArea.setText("Invalid quantity format.");
+                            SwingUtilities.invokeLater(() -> {
+                                resultArea.setText(result);
+                            });
+                        } catch (NumberFormatException ex) {
+                            SwingUtilities.invokeLater(() -> {
+                                resultArea.setText("Invalid quantity format.");
+                            });
+                        }
+                        return null;
                     }
-                }
+
+                    @Override
+                    protected void done() {
+                        updateButton.setEnabled(true);
+                    }
+                };
+
+                worker.execute();
 
                 // Clear the input fields
-                batchCodeField.setText("");
-                productCodeField.setText("");
-                expiryDateField.setText("");
-                purchaseDateField.setText("");
-                batchQtyField.setText("");
-                availableQtyField.setText("");
-                isSoldCheckBox.setSelected(false);
+//                batchCodeField.setText("");
+//                productCodeField.setText("");
+//                expiryDateField.setText("");
+//                purchaseDateField.setText("");
+//                batchQtyField.setText("");
+//                availableQtyField.setText("");
+//                isSoldCheckBox.setSelected(false);
             }
         });
 

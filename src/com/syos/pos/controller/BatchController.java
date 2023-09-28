@@ -58,89 +58,210 @@ public class BatchController extends HttpServlet {
         customGson = gsonBuilder.create();
     }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        String action = request.getParameter("action");
+//    public List<BatchDTO> getExpiringBatchDetails(String product_code){
+//        return batchService.getExpiringBatchDetails(product_code);
+//    }
 
-        if ("getAll".equals(action)) {
-            try {
-                List<BatchDTO> allBatches = batchService.getAll();
-                String jsonBatches = customGson.toJson(allBatches);
+    // get batch details
+//    public  BatchDTO getBatchDetails(String batch_code) throws Exception{
+//        return batchService.getBatchDetails(batch_code);
+//    }
 
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-
-                try (PrintWriter out = response.getWriter()) {
-                    out.print(jsonBatches);
-                }
-            } catch (Exception ex) {
-                Logger.getLogger(BatchController.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-//        else if get by id
-//        else if ("getById".equals(action)) {
-//            // Code to handle getting a single batch by its ID
-//            String batchId = request.getParameter("batchId");
-//            BatchDTO batch = batchService.getById(batchId);
-//            String jsonBatch = customGson.toJson(batch);
-//            response.setContentType("application/json");
-//            response.setCharacterEncoding("UTF-8");
-//            try (PrintWriter out = response.getWriter()) {
-//                out.print(jsonBatch);
-//            }
-//        }
-//        else if ("getExpiring".equals(action)) {
-//            // Code to handle getting expiring batches
-//            List<BatchDTO> expiringBatches = batchService.getExpiringBatches();
-//            String jsonExpiringBatches = customGson.toJson(expiringBatches);
-//            response.setContentType("application/json");
-//            response.setCharacterEncoding("UTF-8");
-//            try (PrintWriter out = response.getWriter()) {
-//                out.print(jsonExpiringBatches);
-//            }
-//        }
-        else {
-            // Default case: if the action is not recognized
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("Invalid action");
-        }
-    }
-
-    public  boolean addBatch(BatchDTO batchDTO){
-        return batchService.add(batchDTO);
-    }
-
-    public  boolean updateBatch(BatchDTO batchDTO){
-        return batchService.update(batchDTO);
-    }
-
-    public  boolean deleteBatch(String code) throws Exception{
-        return batchService.delete(code);
-    }
-
-//    public  List<BatchDTO> getAll() throws Exception{
+    //    public  List<BatchDTO> getAll() throws Exception{
 //        // call the server and get the json response and convet it to a batchdto list
 //        return batchService.getAll();
 //    }
 
     // check batch code exists
-    public  boolean checkBatchCodeExists(String batch_code) throws Exception{
-        return batchService.checkBatchCodeExists(batch_code);
+//    public  boolean checkBatchCodeExists(String batch_code) throws Exception{
+//        return batchService.checkBatchCodeExists(batch_code);
+//    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String action = request.getParameter("action");
+
+        try {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+
+            if ("getAll".equals(action)) {
+                try {
+                    List<BatchDTO> allBatches = batchService.getAll();
+                    String jsonBatches = customGson.toJson(allBatches);
+
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+
+                    try (PrintWriter out = response.getWriter()) {
+                        out.print(jsonBatches);
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(BatchController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            else if ("getByCode".equals(action)) {
+                // Code to handle getting a single batch by its code
+                String batchCode = request.getParameter("batchCode");  // Note: Make sure the parameter name matches what you send from the frontend.
+                try {
+                    BatchDTO batch = batchService.getBatchDetails(batchCode);  // Using the existing getBatchDetails method
+                    String jsonBatch = customGson.toJson(batch);
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    try (PrintWriter out = response.getWriter()) {
+                        out.print(jsonBatch);
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(BatchController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            else if ("getExpiring".equals(action)) {
+                // Get the date from the request parameter
+                String productCode = request.getParameter("productCode");
+
+                try {
+                    List<BatchDTO> expiringBatches = batchService.getExpiringBatchDetails(productCode);
+                    String jsonExpiringBatches = customGson.toJson(expiringBatches);
+
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+
+                    try (PrintWriter out = response.getWriter()) {
+                        out.print(jsonExpiringBatches);
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(BatchController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            else if ("checkBatchCodeExists".equals(action)) {
+                String batchCode = request.getParameter("batchCode");  // Make sure the parameter name matches your frontend.
+                boolean exists = batchService.checkBatchCodeExists(batchCode);
+                String jsonExists = customGson.toJson(exists);
+
+                try (PrintWriter out = response.getWriter()) {
+                    out.print(jsonExists);
+                }
+            }
+            else {
+                // Default case: if the action is not recognized
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("Invalid action");
+            }
+
+        } catch (Exception ex) {
+            Logger.getLogger(BatchController.class.getName()).log(Level.SEVERE, null, ex);
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("An error occurred while processing your request.");
+        }
     }
 
-    // get batch details
-    public  BatchDTO getBatchDetails(String batch_code) throws Exception{
-        return batchService.getBatchDetails(batch_code);
+//    public  boolean addBatch(BatchDTO batchDTO){
+//        return batchService.add(batchDTO);
+//    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String action = request.getParameter("action");
+
+        if ("add".equals(action)) {
+            StringBuilder jsonBuffer = new StringBuilder();
+            String line;
+            BufferedReader reader = request.getReader();
+            while ((line = reader.readLine()) != null) {
+                jsonBuffer.append(line);
+            }
+            String jsonData = jsonBuffer.toString();
+
+            try {
+                BatchDTO newBatch = customGson.fromJson(jsonData, BatchDTO.class);
+
+                // Directly using batchService.add() here instead of calling addBatch()
+                boolean result = batchService.add(newBatch);
+
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                PrintWriter out = response.getWriter();
+                out.print(customGson.toJson(result));
+            } catch (Exception ex) {
+                Logger.getLogger(BatchController.class.getName()).log(Level.SEVERE, null, ex);
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.getWriter().write("An error occurred while processing the request.");
+            }
+        } else {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Invalid action");
+        }
     }
 
-    // udpate batch qty
+
+//    public  boolean updateBatch(BatchDTO batchDTO){
+//        return batchService.update(batchDTO);
+//    }
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String action = request.getParameter("action");
+        if ("update".equals(action)) {
+            StringBuilder jsonBuffer = new StringBuilder();
+            String line;
+            BufferedReader reader = request.getReader();
+            while ((line = reader.readLine()) != null) {
+                jsonBuffer.append(line);
+            }
+            String jsonData = jsonBuffer.toString();
+            try {
+                BatchDTO updatedBatch = customGson.fromJson(jsonData, BatchDTO.class);
+                boolean result = batchService.update(updatedBatch);  // Logic directly here
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                PrintWriter out = response.getWriter();
+                out.print(customGson.toJson(result));
+            } catch (Exception ex) {
+                Logger.getLogger(BatchController.class.getName()).log(Level.SEVERE, null, ex);
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.getWriter().write("An error occurred while processing the request.");
+            }
+        } else {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Invalid action");
+        }
+    }
+
+//    public  boolean deleteBatch(String code) throws Exception{
+//        return batchService.delete(code);
+//    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String action = request.getParameter("action");
+        if ("delete".equals(action)) {
+            String batchCode = request.getParameter("batchCode");
+            try {
+                boolean result = batchService.delete(batchCode);  // Logic directly here
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                PrintWriter out = response.getWriter();
+                out.print(customGson.toJson(result));
+            } catch (Exception ex) {
+                Logger.getLogger(BatchController.class.getName()).log(Level.SEVERE, null, ex);
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.getWriter().write("An error occurred while processing the request.");
+            }
+        } else {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter().write("Invalid action");
+        }
+    }
+
+
+
+
+    // udpate batch qty was commented out in the original code by me
     // public static boolean updateBatchQty(String product_code, double qty) throws Exception{
     //     return batchService.updateBatchQty(product_code, qty);
     // }
-
-    public List<BatchDTO> getExpiringBatchDetails(String product_code){
-        return batchService.getExpiringBatchDetails(product_code);
-    }
 
 }

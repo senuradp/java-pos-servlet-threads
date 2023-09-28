@@ -20,7 +20,6 @@ import java.awt.event.ActionListener;
 public class BatchDeleteGUI extends JFrame {
     private JTextField batchCodeField;
     private JLabel resultLabel;
-
     private BatchGUIService batchService;
 
     public BatchDeleteGUI(BatchGUIService batchService) {
@@ -30,35 +29,23 @@ public class BatchDeleteGUI extends JFrame {
         setSize(400, 150);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        // Create a panel to hold the form components
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(5, 5, 5, 5); // Add some padding
+        constraints.insets = new Insets(5, 5, 5, 5);
 
-        // Label and input field for batch code
         JLabel batchCodeLabel = new JLabel("Batch Code:");
         batchCodeField = new JTextField(20);
 
-        // Create a "Delete Batch" button
         JButton deleteBatchButton = new JButton("Delete Batch");
         deleteBatchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the batch code entered by the user
-                String batchCode = batchCodeField.getText();
-
-                // Call the BatchGUIService to delete the batch
-                String deletionResult = batchService.delete(batchCode);
-
-                // Display the result in the GUI
-                resultLabel.setText(deletionResult);
+                new DeleteBatchWorker().execute();
             }
         });
 
-        // Result area to display the output
         resultLabel = new JLabel();
 
-        // Add components to the panel with constraints
         constraints.gridx = 0;
         constraints.gridy = 0;
         panel.add(batchCodeLabel, constraints);
@@ -73,14 +60,29 @@ public class BatchDeleteGUI extends JFrame {
 
         constraints.gridx = 0;
         constraints.gridy = 2;
-        constraints.gridwidth = 2; // Span across two columns
+        constraints.gridwidth = 2;
         panel.add(resultLabel, constraints);
 
-        // Add the panel to the frame
         getContentPane().add(panel);
-
-        // Center the frame on the screen
         setLocationRelativeTo(null);
+    }
+
+    private class DeleteBatchWorker extends SwingWorker<String, Void> {
+        @Override
+        protected String doInBackground() throws Exception {
+            String batchCode = batchCodeField.getText();
+            return batchService.delete(batchCode);
+        }
+
+        @Override
+        protected void done() {
+            try {
+                String deletionResult = get();
+                resultLabel.setText(deletionResult);
+            } catch (Exception e) {
+                resultLabel.setText("An error occurred: " + e.getMessage());
+            }
+        }
     }
 
     public static void main(String[] args) {
