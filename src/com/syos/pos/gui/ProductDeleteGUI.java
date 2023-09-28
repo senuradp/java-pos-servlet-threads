@@ -39,18 +39,33 @@ public class ProductDeleteGUI extends JFrame {
         productCodeField = new JTextField(20);
 
         // Create a "Delete Product" button
+
         JButton deleteProductButton = new JButton("Delete Product");
         deleteProductButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the product code entered by the user
-                String productCode = productCodeField.getText();
+                deleteProductButton.setEnabled(false);
 
-                // Call the ProductGUIService to delete the product
-                String deletionResult = productService.delete(productCode);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        String productCode = productCodeField.getText();
+                        String deletionResult = productService.delete(productCode);
 
-                // Display the result in the GUI
-                resultLabel.setText(deletionResult);
+                        SwingUtilities.invokeLater(() -> {
+                            resultLabel.setText(deletionResult);
+                        });
+
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        deleteProductButton.setEnabled(true);
+                    }
+                };
+
+                worker.execute();
             }
         });
 

@@ -52,28 +52,38 @@ public class ProductAddGUI extends JFrame {
         addProductButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the input values from the GUI
-                String productCode = productCodeField.getText();
-                String productName = productNameField.getText();
-                String productPriceText = productPriceField.getText();
+                addProductButton.setEnabled(false);
 
-                // Validate the input
-                if (productCode.isEmpty() || productName.isEmpty() || productPriceText.isEmpty()) {
-                    resultArea.setText("Please fill in all fields.");
-                } else {
-                    try {
-                        // Parse the product price as a double
-                        double productPrice = Double.parseDouble(productPriceText);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        String productCode = productCodeField.getText();
+                        String productName = productNameField.getText();
+                        String productPriceText = productPriceField.getText();
 
-                        // Call the service to add the product
-                        String result = productService.add(productCode, productName, productPrice);
+                        try {
+                            double productPrice = Double.parseDouble(productPriceText);
+                            String result = productService.add(productCode, productName, productPrice);
 
-                        // Display the result in the GUI
-                        resultArea.setText(result);
-                    } catch (NumberFormatException ex) {
-                        resultArea.setText("Invalid product price format.");
+                            SwingUtilities.invokeLater(() -> {
+                                resultArea.setText(result);
+                            });
+                        } catch (NumberFormatException ex) {
+                            SwingUtilities.invokeLater(() -> {
+                                resultArea.setText("Invalid product price format.");
+                            });
+                        }
+
+                        return null;
                     }
-                }
+
+                    @Override
+                    protected void done() {
+                        addProductButton.setEnabled(true);
+                    }
+                };
+
+                worker.execute();
             }
         });
 
@@ -137,3 +147,5 @@ public class ProductAddGUI extends JFrame {
         });
     }
 }
+
+

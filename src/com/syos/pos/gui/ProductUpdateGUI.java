@@ -26,91 +26,90 @@ public class ProductUpdateGUI extends JFrame {
 
     public ProductUpdateGUI(ProductGUIService productService) {
         this.productService = productService;
-        
+
         setTitle("Update Product");
         setSize(400, 300);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        // Create a panel to hold the form components
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
-        constraints.insets = new Insets(5, 5, 5, 5); // Add some padding
+        constraints.insets = new Insets(5, 5, 5, 5);
 
-        // Label and input field for product code
         JLabel productCodeLabel = new JLabel("Product Code:");
         productCodeField = new JTextField(20);
 
-        // Create a "Get Product" button
         JButton getProductButton = new JButton("Get Product");
         getProductButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the product code entered by the user
-                String productCode = productCodeField.getText();
-
-                // Call the service to retrieve product details
-                String[] productDetails = productService.getByCode(productCode);
-
-                if (productDetails != null) {
-                    // Set the retrieved values to the text fields
-                    productNameField.setText(productDetails[0]); // Assuming the product name is at index 0
-                    productPriceField.setText(productDetails[1]); // Assuming the product price is at index 1
-                } else {
-                    // Handle the case where the product is not found
-                    JOptionPane.showMessageDialog(null, "Product not found for code: " + productCode, "Product Not Found", JOptionPane.ERROR_MESSAGE);
-                    System.out.println("not found");
-                }
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        String productCode = productCodeField.getText();
+                        String[] productDetails = productService.getByCode(productCode);
+                        if (productDetails != null) {
+                            SwingUtilities.invokeLater(() -> {
+                                productNameField.setText(productDetails[0]);
+                                productPriceField.setText(productDetails[1]);
+                            });
+                        } else {
+                            SwingUtilities.invokeLater(() -> {
+                                JOptionPane.showMessageDialog(null, "Product not found for code: " + productCode, "Product Not Found", JOptionPane.ERROR_MESSAGE);
+                            });
+                        }
+                        return null;
+                    }
+                };
+                worker.execute();
             }
         });
 
-        // Labels and input fields for product details
         JLabel productNameLabel = new JLabel("Product Name:");
         productNameField = new JTextField(20);
 
         JLabel productPriceLabel = new JLabel("Price:");
         productPriceField = new JTextField(20);
 
-        // Create an "Update" button
         JButton updateButton = new JButton("Update");
         updateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the updated input values
-                String updatedProductCode = productCodeField.getText();
-                String updatedProductName = productNameField.getText();
-                String updatedProductPriceText = productPriceField.getText();
-                
-                // Validate the input
-                if (updatedProductCode.isEmpty() || updatedProductName.isEmpty() || updatedProductPriceText.isEmpty()) {
-                    resultArea.setText("Please fill in all fields.");
-                } else {
-                    try {
-                        // Parse the product price as a double
-                        double productPrice = Double.parseDouble(updatedProductPriceText);
+                updateButton.setEnabled(false);
 
-                        // Call the service to add the product
-                        String result = productService.update(updatedProductCode, updatedProductName, productPrice);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        String updatedProductCode = productCodeField.getText();
+                        String updatedProductName = productNameField.getText();
+                        String updatedProductPriceText = productPriceField.getText();
 
-                        // Display the result in the GUI
-                        resultArea.setText(result);
-                    } catch (NumberFormatException ex) {
-                        resultArea.setText("Invalid product price format.");
+                        try {
+                            double productPrice = Double.parseDouble(updatedProductPriceText);
+                            String result = productService.update(updatedProductCode, updatedProductName, productPrice);
+
+                            SwingUtilities.invokeLater(() -> {
+                                resultArea.setText(result);
+                            });
+                        } catch (NumberFormatException ex) {
+                            SwingUtilities.invokeLater(() -> {
+                                resultArea.setText("Invalid product price format.");
+                            });
+                        }
+
+                        return null;
                     }
-                }
 
-                // Clear the input fields
-                productCodeField.setText("");
-                productNameField.setText("");
-                productPriceField.setText("");
+                    @Override
+                    protected void done() {
+                        updateButton.setEnabled(true);
+                    }
+                };
+
+                worker.execute();
             }
         });
 
-        // Result area to display the output
         resultArea = new JLabel();
-//        JScrollPane resultScrollPane = new JScrollPane(resultArea);
 
-        // Add components to the panel
-        // Add components to the panel with constraints
         constraints.gridx = 0;
         constraints.gridy = 0;
         panel.add(productCodeLabel, constraints);
@@ -141,18 +140,16 @@ public class ProductUpdateGUI extends JFrame {
 
         constraints.gridx = 0;
         constraints.gridy = 4;
-        constraints.gridwidth = 3; // Span across three columns
+        constraints.gridwidth = 3;
         panel.add(updateButton, constraints);
 
         constraints.gridx = 0;
         constraints.gridy = 5;
-        constraints.gridwidth = 3; // Span across three columns
+        constraints.gridwidth = 3;
         panel.add(resultArea, constraints);
 
-        // Add the panel to the frame
         getContentPane().add(panel);
 
-        // Center the frame on the screen
         setLocationRelativeTo(null);
     }
 
