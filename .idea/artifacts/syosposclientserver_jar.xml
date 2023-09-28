@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="syosposclientserver:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/syosposclientserver_jar</output-path>
+    <root id="archive" name="syosposclientserver.jar">
+      <element id="module-output" name="syosposclientserver" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/AbsoluteLayout-RELEASE124.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/gson-2.8.8.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../lib/servlet-api.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/mysql-connector-j-8.0.33/mysql-connector-j-8.0.33.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

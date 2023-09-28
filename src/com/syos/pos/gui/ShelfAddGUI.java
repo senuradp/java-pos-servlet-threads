@@ -55,17 +55,40 @@ public class ShelfAddGUI extends JFrame {
         addShelfButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the input values from the GUI
-                String shelfCode = shelfCodeField.getText();
-                String productCode = productCodeField.getText();
-                double capacity = Double.parseDouble(capacityField.getText());
-                double availableQty = Double.parseDouble(availableQtyField.getText());
+                addShelfButton.setEnabled(false);
 
-                // Call the shelf service to add the shelf
-                String result = shelfService.add(shelfCode, productCode, capacity, availableQty);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        String shelfCode = shelfCodeField.getText();
+                        String productCode = productCodeField.getText();
+                        String capacityText = capacityField.getText();
+                        String availableQtyText = availableQtyField.getText();
 
-                // Display the result in the GUI
-                resultArea.setText(result);
+                        try {
+                            double capacity = Double.parseDouble(capacityText);
+                            double availableQty = Double.parseDouble(availableQtyText);
+                            String result = shelfService.add(shelfCode, productCode, capacity, availableQty);
+
+                            SwingUtilities.invokeLater(() -> {
+                                resultArea.setText(result);
+                            });
+                        } catch (NumberFormatException ex) {
+                            SwingUtilities.invokeLater(() -> {
+                                resultArea.setText("Invalid number format.");
+                            });
+                        }
+
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        addShelfButton.setEnabled(true);
+                    }
+                };
+
+                worker.execute();
             }
         });
 

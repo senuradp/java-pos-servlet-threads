@@ -12,6 +12,9 @@ package com.syos.pos.gui;
 
 import com.syos.pos.controller.ProductController;
 import com.syos.pos.controller.ShelfController;
+import com.syos.pos.menucommand.ProductGUIService;
+import com.syos.pos.menucommand.ShelfGUIService;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -50,7 +53,7 @@ public class RestockGUI extends JFrame {
         restockButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                restockShelf();
+                new RestockWorker().execute();
             }
         });
 
@@ -58,37 +61,52 @@ public class RestockGUI extends JFrame {
         getContentPane().add(panel, BorderLayout.CENTER);
     }
 
-    private void restockShelf() {
-        String productCode = productCodeField.getText();
-        String quantityText = quantityField.getText();
+    class RestockWorker extends SwingWorker<Boolean, Void> {
+        @Override
+        protected Boolean doInBackground() {
+            String productCode = productCodeField.getText();
+            String quantityText = quantityField.getText();
 
-        if (productCode.isEmpty() || quantityText.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter product code and quantity.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        double quantity;
-        try {
-            quantity = Double.parseDouble(quantityText);
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Invalid quantity format.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        ShelfController shelfController = new ShelfController();
-        ProductController productController = new ProductController();
-
-        if (productController.checkProductCodeExists(productCode)) {
-            try {
-                shelfController.reStockShelf(productCode, quantity);
-                JOptionPane.showMessageDialog(this, "Shelf restocked successfully!");
-                // You can close the GUI or perform other actions here
-            } catch (Exception e) {
-                e.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Failed to restock shelf.", "Error", JOptionPane.ERROR_MESSAGE);
+            if (productCode.isEmpty() || quantityText.isEmpty()) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(RestockGUI.this, "Please enter product code and quantity.", "Error", JOptionPane.ERROR_MESSAGE));
+                return false;
             }
-        } else {
-            JOptionPane.showMessageDialog(this, "Product code not found.", "Error", JOptionPane.ERROR_MESSAGE);
+
+            double quantity;
+            try {
+                quantity = Double.parseDouble(quantityText);
+            } catch (NumberFormatException e) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(RestockGUI.this, "Invalid quantity format.", "Error", JOptionPane.ERROR_MESSAGE));
+                return false;
+            }
+
+            ProductGUIService productGUIService = new ProductGUIService();
+            ShelfGUIService shelfGUIService = new ShelfGUIService();
+
+            if (productGUIService.checkProductCodeExists(productCode)) {
+                try {
+                    return shelfGUIService.reStockShelf(productCode, quantity);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            } else {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(RestockGUI.this, "Product code not found.", "Error", JOptionPane.ERROR_MESSAGE));
+                return false;
+            }
+        }
+
+        @Override
+        protected void done() {
+            try {
+                if (get()) {
+                    JOptionPane.showMessageDialog(RestockGUI.this, "Shelf restocked successfully!");
+                } else {
+                    JOptionPane.showMessageDialog(RestockGUI.this, "Failed to restock shelf.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(RestockGUI.this, "An error occurred.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 

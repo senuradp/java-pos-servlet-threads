@@ -57,21 +57,28 @@ public class ShelfUpdateGUI extends JFrame {
         getShelfButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the shelf code entered by the user
-                String shelfCode = shelfCodeField.getText();
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        // Get the shelf code entered by the user
+                        String shelfCode = shelfCodeField.getText();
 
-                // Call the service to retrieve shelf details
-                String[] shelfDetails = shelfService.getByCode(shelfCode);
+                        // Call the service to retrieve shelf details
+                        String[] shelfDetails = shelfService.getByCode(shelfCode);
 
-                if (shelfDetails != null) {
-                    // Set the retrieved values to the text fields
-                    productCodeField.setText(shelfDetails[0]); // Assuming product code is at index 1
-                    capacityField.setText(shelfDetails[1]); // Assuming capacity is at index 2
-                    availableQtyField.setText(shelfDetails[2]); // Assuming available quantity is at index 3
-                } else {
-                    // Handle the case where the shelf is not found
-                    JOptionPane.showMessageDialog(null, "Shelf not found for code: " + shelfCode, "Shelf Not Found", JOptionPane.ERROR_MESSAGE);
-                }
+                        if (shelfDetails != null) {
+                            // Set the retrieved values to the text fields
+                            productCodeField.setText(shelfDetails[0]); // Assuming product code is at index 1
+                            capacityField.setText(shelfDetails[1]); // Assuming capacity is at index 2
+                            availableQtyField.setText(shelfDetails[2]); // Assuming available quantity is at index 3
+                        } else {
+                            // Handle the case where the shelf is not found
+                            JOptionPane.showMessageDialog(null, "Shelf not found for code: " + shelfCode, "Shelf Not Found", JOptionPane.ERROR_MESSAGE);
+                        }
+                        return null;
+                    }
+                };
+                worker.execute();
             }
         });
 
@@ -80,35 +87,49 @@ public class ShelfUpdateGUI extends JFrame {
         updateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the updated input values
-                String updatedShelfCode = shelfCodeField.getText();
-                String updatedProductCode = productCodeField.getText();
-                String updatedCapacity = capacityField.getText();
-                String updatedAvailableQty = availableQtyField.getText();
+                updateButton.setEnabled(false);
 
-                // Validate the input
-                if (updatedProductCode.isEmpty() || updatedCapacity.isEmpty() || updatedAvailableQty.isEmpty()) {
-                    resultArea.setText("Please fill in all fields.");
-                } else {
-                    try {
-                        // Parse capacity and availableQty as doubles
-                        double capacity = Double.parseDouble(updatedCapacity);
-                        double availableQty = Double.parseDouble(updatedAvailableQty);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        // Get the updated input values
+                        String updatedShelfCode = shelfCodeField.getText();
+                        String updatedProductCode = productCodeField.getText();
+                        String updatedCapacity = capacityField.getText();
+                        String updatedAvailableQty = availableQtyField.getText();
 
-                        // Call the service to update the shelf
-                        String result = shelfService.update(updatedShelfCode, updatedProductCode, capacity, availableQty);
+                        // Validate the input
+                        if (updatedProductCode.isEmpty() || updatedCapacity.isEmpty() || updatedAvailableQty.isEmpty()) {
+                            resultArea.setText("Please fill in all fields.");
+                        } else {
+                            try {
+                                // Parse capacity and availableQty as doubles
+                                double capacity = Double.parseDouble(updatedCapacity);
+                                double availableQty = Double.parseDouble(updatedAvailableQty);
 
-                        // Display the result in the GUI
-                        resultArea.setText(result);
-                    } catch (NumberFormatException ex) {
-                        resultArea.setText("Invalid quantity format.");
+                                // Call the service to update the shelf
+                                String result = shelfService.update(updatedShelfCode, updatedProductCode, capacity, availableQty);
+
+                                // Display the result in the GUI
+                                resultArea.setText(result);
+                            } catch (NumberFormatException ex) {
+                                resultArea.setText("Invalid quantity format.");
+                            }
+                        }
+
+                        // Clear the input fields
+//                        productCodeField.setText("");
+//                        capacityField.setText("");
+//                        availableQtyField.setText("");
+                        return null;
                     }
-                }
+                    @Override
+                    protected void done() {
+                        updateButton.setEnabled(true);
+                    }
+                };
 
-                // Clear the input fields
-                productCodeField.setText("");
-                capacityField.setText("");
-                availableQtyField.setText("");
+                worker.execute();
             }
         });
 

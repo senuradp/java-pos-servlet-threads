@@ -44,14 +44,28 @@ public class ShelfDeleteGUI extends JFrame {
         deleteShelfButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get the shelf code entered by the user
-                String shelfCode = shelfCodeField.getText();
+                deleteShelfButton.setEnabled(false);
 
-                // Call the ShelfGUIService to delete the shelf
-                String deletionResult = shelfService.delete(shelfCode);
+                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                    @Override
+                    protected Void doInBackground() {
+                        String shelfCode = shelfCodeField.getText();
+                        String deletionResult = shelfService.delete(shelfCode);
 
-                // Display the result in the GUI
-                resultLabel.setText(deletionResult);
+                        SwingUtilities.invokeLater(() -> {
+                            resultLabel.setText(deletionResult);
+                        });
+
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        deleteShelfButton.setEnabled(true);
+                    }
+                };
+
+                worker.execute();
             }
         });
 
