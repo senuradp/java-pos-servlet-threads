@@ -9,6 +9,7 @@ package com.syos.pos.config;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Vector;
 
 /**
@@ -63,15 +64,59 @@ public class DBConnection {
         }
         return connection;
     }
+//1
+//    public synchronized Connection getConnectionFromPool() {
+//        Connection connection = null;
+//        if (connectionPool.size() > 0) {
+//            connection = connectionPool.firstElement();
+//            connectionPool.removeElementAt(0);
+//        }
+//        return connection;
+//    }
 
+    private boolean isValid(Connection conn) {
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeQuery("SELECT 1");
+            return true;
+        } catch (SQLException ex) {
+            return false;
+        }
+    }
+// 3 - handle stale connections
     public synchronized Connection getConnectionFromPool() {
         Connection connection = null;
-        if (connectionPool.size() > 0) {
+        while (connectionPool.size() > 0) {
             connection = connectionPool.firstElement();
             connectionPool.removeElementAt(0);
+            try {
+                if (isValid(connection)) {
+                    return connection;
+                } else {
+                    connection.close();  // Close the stale connection
+                }
+            } catch (SQLException ex) {
+                // Handle the exception or log it
+                System.err.println("Error while validating or closing connection: " + ex.getMessage());
+                ex.printStackTrace();
+            } finally {
+                connection = null;  // reset for the next loop iteration
+            }
         }
-        return connection;
+        // If no valid connection is found in the pool, create a new one
+        return createNewConnectionForPool();
     }
+
+//2
+//    public synchronized Connection getConnectionFromPool() {
+//        Connection connection = null;
+//        if (connectionPool.size() > 0) {
+//            connection = connectionPool.firstElement();
+//            connectionPool.removeElementAt(0);
+//        } else {
+//            connection = createNewConnectionForPool();
+//        }
+//        return connection;
+//    }
 
     public synchronized void returnConnectionToPool(Connection connection) {
         connectionPool.addElement(connection);
