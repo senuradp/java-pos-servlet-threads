@@ -33,11 +33,15 @@ public class OrderService {
     private static final IBillDetailService billDetailService = (IBillDetailService) ServiceFactory.getInstance().getDAO(ServiceFactory.ServiceType.BILL_DETAIL);
 
     private static OrderService orderServiceInstance;
-    private BillHeaderDTO billHeaderDTO;
-    private BillDetailDTO billDetailDTO;
+    private final BillHeaderDTO billHeaderDTO;
+    private final BillDetailDTO billDetailDTO;
+//    private BillHeaderDTO billHeaderDTO;
+//    private BillDetailDTO billDetailDTO;
 
     
     private OrderService() {
+        this.billHeaderDTO = new BillHeaderDTO();
+        this.billDetailDTO = new BillDetailDTO();
     }
 
     public static OrderService getInstance() {
@@ -51,7 +55,7 @@ public class OrderService {
 
         Date currentDate = new Date();
 
-        billHeaderDTO = new BillHeaderDTO();
+//        billHeaderDTO = new BillHeaderDTO();
         billHeaderDTO.setBill_serial_number(generateSerialNumber());
         billHeaderDTO.setDate(currentDate);
 
@@ -66,8 +70,15 @@ public class OrderService {
         // productService.getProductByCode(product_code);
 
         ProductDTO product = productService.getProductByCode(product_code);
+
+        if(product == null) {
+            throw new Exception("Product with code " + product_code + " not found.");
+        }
+
+        String productName = product.getProduct_name();
+        double price = product.getProduct_price();
         
-        billHeaderDTO.addProduct(product_code, product.getProduct_name(), qty, product.getProduct_price());
+        billHeaderDTO.addProduct(product_code, productName, qty, price);
 
         return billHeaderDTO.getTotal_bill_price();
     }
@@ -80,34 +91,34 @@ public class OrderService {
         return billHeaderDTO.getTotal_bill_price();
     }
 //    amount_tendered > billHeaderDTO.getTotal_bill_price()
- 
+
     public double checkoutPay(double amount_tendered, String payment_type) throws Exception {
 
         // pass the payment type to bill header
         billHeaderDTO.setPayment_type(payment_type);
-        
-        if (amount_tendered < billHeaderDTO.getTotal_bill_price()) {
-            Scanner scanner = new Scanner(System.in);
-            System.out.println("The amount tendered is lower than the total bill price which is " + billHeaderDTO.getTotal_bill_price());
-            System.out.println("Please enter a sufficient amount: ");
-            amount_tendered = scanner.nextDouble();
-//            scanner.nextLine(); // Consume newline character
 
+        if (amount_tendered < billHeaderDTO.getTotal_bill_price()) {
+//            Scanner scanner = new Scanner(System.in);
+//            System.out.println("The amount tendered is lower than the total bill price which is " + billHeaderDTO.getTotal_bill_price());
+//            System.out.println("Please enter a sufficient amount: ");
+//            amount_tendered = scanner.nextDouble();
+//            scanner.nextLine(); // Consume newline character
+            throw new Exception("Amount tendered is less than total bill price. " + billHeaderDTO.getTotal_bill_price());
             // Recalculate balance
-            return checkoutPay(amount_tendered, payment_type);
+//            return checkoutPay(amount_tendered, payment_type);
         }
 
         double balance = calculateBalancePay(amount_tendered);
-        
+
         billHeaderDTO.setAmount_tendered(amount_tendered);
         billHeaderDTO.setChange(balance);
 
         billHeaderService.add(billHeaderDTO);
-        
+
         List<BillDetailDTO> billDetail = billHeaderDTO.getTypeOfBillDetails();
 
         for (int i = 0; i < billDetail.size(); i++) {
-            
+
             BillDetailDTO billDetailDTO = billDetail.get(i);
 
             //save
@@ -116,8 +127,8 @@ public class OrderService {
             //update
             String product_code = billDetailDTO.getProduct_code();
             double qty = billDetailDTO.getItem_qty();
-            
-            
+
+
             double availableShelfQty = getAvailableQty(product_code);
 
             qty = availableShelfQty - qty;

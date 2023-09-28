@@ -344,6 +344,20 @@ public class ProductGUIService {
     public String[] getByCode(String productCode) {
         Future<String[]> future = executorService.submit(() -> {
             try {
+
+
+//                HttpClient existCheckClient = HttpClient.newHttpClient();
+//                HttpRequest existCheckRequest = HttpRequest.newBuilder()
+//                        .uri(new URI("http://localhost:8080/syosposclientserver/ProductController?action=checkCodeExists&product_code=" + productCode))
+//                        .GET()
+//                        .build();
+//
+//                HttpResponse<String> existCheckResponse = existCheckClient.send(existCheckRequest, HttpResponse.BodyHandlers.ofString());
+//
+//                if (existCheckResponse.statusCode() != 200 || !"true".equals(existCheckResponse.body())) {
+//                    return null;
+//                }
+
                 // Prepare the HTTP request
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
@@ -388,7 +402,7 @@ public class ProductGUIService {
                 // Prepare the HTTP request
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(new URI("http://localhost:8080/syosposclientserver/ProductController?action=checkCodeExists&productCode=" + productCode))
+                        .uri(new URI("http://localhost:8080/syosposclientserver/ProductController?action=checkCodeExists&product_code=" + productCode))
                         .GET() // Use the GET method
                         .build();
 
