@@ -69,13 +69,6 @@ public class ShelfController extends HttpServlet {
         out.print(customGson.toJson(result));
     }
 
-//    public static boolean addItem(ShelfDTO shelfDTO){
-//        return shelfService.add(shelfDTO);
-//    }
-    // restock
-//    public boolean reStockShelf(String product_code, double restock_qty) throws Exception{
-//        return shelfService.reStockShelf(product_code, restock_qty);
-//    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)

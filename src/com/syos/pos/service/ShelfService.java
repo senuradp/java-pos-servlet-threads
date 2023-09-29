@@ -152,7 +152,8 @@ public class ShelfService implements IShelfService{
                     batchRepositoryDAO.update(batch);
                     
                     restockQty = 0;
-                    
+
+                    return true;
                 }else{
                     
                     restockQty = restockQty - batch.getAvailable_qty();
@@ -162,7 +163,7 @@ public class ShelfService implements IShelfService{
                     
                 }
             }
-            
+            return false;
             
         }catch (Exception ex) {
              Logger.getLogger(ShelfRepository.class.getName()).log(Level.SEVERE, null, ex);
