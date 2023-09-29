@@ -415,10 +415,20 @@ public class ShelfGUIService {
     public boolean reStockShelf(String productCode, double quantity) {
         Future<Boolean> future = executorService.submit(() -> {
             try {
+
+                // Create a JSON object to hold the product code and restock quantity
+                JsonObject requestJson = new JsonObject();
+                requestJson.addProperty("product_code", productCode);
+                requestJson.addProperty("restock_qty", quantity);
+
+                // Convert the JSON object to a string
+                String jsonPayload = customGson.toJson(requestJson);
+
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(new URI("http://localhost:8080/syosposclientserver/ShelfController?action=restock&product_code=" + productCode + "&restock_qty=" + quantity))
-                        .GET()
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                        .header("Content-Type", "application/json")
                         .build();
 
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());

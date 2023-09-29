@@ -17,9 +17,7 @@ import com.syos.pos.service.dao.IProductService;
 import com.syos.pos.service.dao.IShelfService;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  *
@@ -35,14 +33,19 @@ public class OrderService {
     private static final IBillDetailService billDetailService = (IBillDetailService) ServiceFactory.getInstance().getDAO(ServiceFactory.ServiceType.BILL_DETAIL);
 
     private static OrderService orderServiceInstance;
-    private final BillHeaderDTO billHeaderDTO;
+
+    //make BillHeaderDTO as a map(serial number):value(BillHeaderDTO)
+    private Map<String, BillHeaderDTO> billHeaderMap ;
+
+//    private final BillHeaderDTO billHeaderDTO;
     private final BillDetailDTO billDetailDTO;
 //    private BillHeaderDTO billHeaderDTO;
 //    private BillDetailDTO billDetailDTO;
     private static final ReentrantLock lock = new ReentrantLock();
+    private Map<String, ReentrantLock> productLocks = new HashMap<>();
 
     private OrderService() {
-        this.billHeaderDTO = new BillHeaderDTO();
+        this.billHeaderMap = new HashMap<>();
         this.billDetailDTO = new BillDetailDTO();
     }
 
@@ -58,12 +61,13 @@ public class OrderService {
         try {
             Date currentDate = new Date();
 
-    //        billHeaderDTO = new BillHeaderDTO();
+            BillHeaderDTO billHeaderDTO = new BillHeaderDTO();
             billHeaderDTO.setBill_serial_number(generateSerialNumber());
             billHeaderDTO.setDate(currentDate);
-
-            // Reset the total bill price for the new order
             billHeaderDTO.setTotal_bill_price(0.0);
+
+            //the BillHeaderDTO to the map
+            billHeaderMap.put(billHeaderDTO.getBill_serial_number(), billHeaderDTO);
 
             return billHeaderDTO.getBill_serial_number();
         } finally {
@@ -71,7 +75,7 @@ public class OrderService {
         }
     }
 
-    public double addOrderProduct(String product_code, double qty) throws Exception {
+    public double addOrderProduct(String serial_number, String product_code, double qty) throws Exception {
         lock.lock();
         try {
             double total_price = 0;
@@ -88,70 +92,93 @@ public class OrderService {
 
             String productName = product.getProduct_name();
             double price = product.getProduct_price();
+            //check if serial number is in the array
+            billHeaderMap.get(serial_number).addProduct(product_code, productName, qty, price);
 
-            billHeaderDTO.addProduct(product_code, productName, qty, price);
-
-            return billHeaderDTO.getTotal_bill_price();
+            return billHeaderMap.get(serial_number).getTotal_bill_price();
         } finally {
             lock.unlock();
         }
     }
 
-    public double addDiscount(double discount_amount) {
+    public double addDiscount(String serial_number, double discount_amount) {
         double total_price = 0;
 
-        billHeaderDTO.setDiscount(discount_amount);
+        billHeaderMap.get(serial_number).setDiscount(discount_amount);
 
-        return billHeaderDTO.getTotal_bill_price();
+        return billHeaderMap.get(serial_number).getTotal_bill_price();
     }
 //    amount_tendered > billHeaderDTO.getTotal_bill_price()
 
-    public double checkoutPay(double amount_tendered, String payment_type) throws Exception {
+    // Helper method to get or create a lock for a product
+    private ReentrantLock getProductLock(String product_code) {
+        productLocks.putIfAbsent(product_code, new ReentrantLock());
+        return productLocks.get(product_code);
+    }
 
-        // pass the payment type to bill header
-        billHeaderDTO.setPayment_type(payment_type);
+    public double checkoutPay(String serial_number, double amount_tendered, String payment_type) throws Exception {
+        ReentrantLock productLock = getProductLock(serial_number);
 
-        if (amount_tendered < billHeaderDTO.getTotal_bill_price()) {
-//            Scanner scanner = new Scanner(System.in);
-//            System.out.println("The amount tendered is lower than the total bill price which is " + billHeaderDTO.getTotal_bill_price());
-//            System.out.println("Please enter a sufficient amount: ");
-//            amount_tendered = scanner.nextDouble();
-//            scanner.nextLine(); // Consume newline character
-            throw new Exception("Amount tendered is less than total bill price. " + billHeaderDTO.getTotal_bill_price());
-            // Recalculate balance
-//            return checkoutPay(amount_tendered, payment_type);
+        // Lock the product to ensure exclusive access
+        productLock.lock();
+        boolean insufficientProduct = false; // Flag to track if any product is insufficient
+        List<String> insufficientProducts = new ArrayList<>();
+        try {
+            // pass the payment type to bill header
+            billHeaderMap.get(serial_number).setPayment_type(payment_type);
+
+            if (amount_tendered < billHeaderMap.get(serial_number).getTotal_bill_price()) {
+                throw new Exception("Amount tendered is less than total bill price. " + billHeaderMap.get(serial_number).getTotal_bill_price());
+            }
+
+            double balance = calculateBalancePay(serial_number, amount_tendered);
+
+            billHeaderMap.get(serial_number).setAmount_tendered(amount_tendered);
+            billHeaderMap.get(serial_number).setChange(balance);
+
+            List<BillDetailDTO> billDetail = billHeaderMap.get(serial_number).getTypeOfBillDetails();
+
+            for (int i = 0; i < billDetail.size(); i++) {
+
+                BillDetailDTO billDetailDTO = billDetail.get(i);
+
+                //update
+                String product_code = billDetailDTO.getProduct_code();
+                double qty = billDetailDTO.getItem_qty();
+
+                double availableShelfQty = getAvailableQty(product_code);
+
+                if (qty > availableShelfQty) {
+                    insufficientProduct = true; // Set the flag if any product is insufficient
+                    insufficientProducts.add(product_code);
+                }
+            }
+
+            // Check if any product was insufficient, if not, save bill header and update shelves
+            if (!insufficientProduct) {
+                for (int i = 0; i < billDetail.size(); i++) {
+                    BillDetailDTO billDetailDTO = billDetail.get(i);
+                    String product_code = billDetailDTO.getProduct_code();
+                    double qty = billDetailDTO.getItem_qty();
+                    double availableShelfQty = getAvailableQty(product_code);
+                    qty = availableShelfQty - qty;
+                    updateShelf(product_code, qty);
+                }
+                billHeaderService.add(billHeaderMap.get(serial_number));
+            } else {
+                throw new Exception("One or more products have insufficient stock.: " + String.join(", ", insufficientProducts));
+            }
+
+            //remove the bill header from the array
+            billHeaderMap.remove(serial_number);
+
+            return balance;
+
         }
-
-        double balance = calculateBalancePay(amount_tendered);
-
-        billHeaderDTO.setAmount_tendered(amount_tendered);
-        billHeaderDTO.setChange(balance);
-
-        billHeaderService.add(billHeaderDTO);
-
-        List<BillDetailDTO> billDetail = billHeaderDTO.getTypeOfBillDetails();
-
-        for (int i = 0; i < billDetail.size(); i++) {
-
-            BillDetailDTO billDetailDTO = billDetail.get(i);
-
-            //save
-            billDetailService.add(billDetailDTO);
-
-            //update
-            String product_code = billDetailDTO.getProduct_code();
-            double qty = billDetailDTO.getItem_qty();
-
-
-            double availableShelfQty = getAvailableQty(product_code);
-
-            qty = availableShelfQty - qty;
-
-            updateShelf(product_code, qty);
+        finally {
+            // Release the lock when done
+            productLock.unlock();
         }
-
-
-        return balance;
     }
 
     public double getAvailableQty(String product_code) throws Exception {
@@ -161,8 +188,12 @@ public class OrderService {
     }
 
     public void updateShelf(String product_code, double qty) throws Exception {
-
-        shelfService.updateShelf(product_code, qty);
+        lock.lock();
+        try {
+            shelfService.updateShelf(product_code, qty);
+        } finally {
+            lock.unlock();
+        }
 
     }
 
@@ -184,10 +215,10 @@ public class OrderService {
 //        return 0;
 //    }
 
-    public double calculateBalancePay(double amount_tendered) {
+    public double calculateBalancePay(String serial_number, double amount_tendered) {
         double balance = 0;
 
-        balance = amount_tendered - billHeaderDTO.getTotal_bill_price();
+        balance = amount_tendered - billHeaderMap.get(serial_number).getTotal_bill_price();
 
         return balance;
     }

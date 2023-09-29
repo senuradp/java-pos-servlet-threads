@@ -106,7 +106,8 @@ public class ShelfController extends HttpServlet {
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     out.print("An error occurred while processing the request.");
                 }
-            } else if ("restock".equals(action)) {
+            }
+            else if ("restock".equals(action)) {
                 String productCode = request.getParameter("product_code");
                 double restockQty = Double.parseDouble(request.getParameter("restock_qty"));
 

@@ -37,70 +37,6 @@ import java.util.logging.Logger;
  * @author senu2k
  */
 public class OrderGUIService {
-//    void add() {
-//         try {
-//            Scanner scanner = new Scanner(System.in);
-//            ProductController productController = new ProductController();
-//            OrderService orderService = OrderService.getInstance();
-//            orderService.createOrder();
-//
-//            System.out.println("Adding a new order...");
-//
-//
-//            while (true) {
-//                System.out.println("Enter product code (or 'done' to finish adding products): ");
-//                String productCode = scanner.nextLine();
-//
-//                if (productCode.equals("done")) {
-//                    break; // Exit the loop if 'done' is entered
-//                }
-//
-//                System.out.println("Enter quantity: ");
-//                double quantity = scanner.nextDouble();
-//
-//                // Check if the product code exists
-//                boolean productCodeExists = productController.checkProductCodeExists(productCode);
-//
-//                if (!productCodeExists) {
-//                    System.out.println("Product code does not exist!");
-//                    continue; // Skip to the next iteration if product code does not exist
-//                }
-//
-//                orderService.addOrderProduct(productCode, quantity);
-//                System.out.println("Product added to the order!");
-//
-//                // Clear the scanner buffer
-//                scanner.nextLine();
-//            }
-//
-//            // Get payment type and discount once
-//            System.out.println("Enter payment type (Cash/Card): ");
-//            String pmt_type = scanner.nextLine();
-//
-//            System.out.println("Enter customer amount: ");
-//            double customer_amount = scanner.nextDouble();
-//
-//            System.out.println("Enter discount: ");
-//            double discount = scanner.nextDouble();
-//
-//            // Perform payment and checkout
-//            orderService.addDiscount(discount);
-////            orderService.checkoutPay(customer_amount, pmt_type);
-//
-//
-////            double balanceAmount = orderService.calculateBalancePay(customer_amount);
-//            double balanceAmount = orderService.checkoutPay(customer_amount, pmt_type);
-//
-////            balance
-//            System.out.println("Balance: " + balanceAmount);
-//
-//
-//            System.out.println("Order completed!");
-//
-//        } catch (Exception ex) {
-//            Logger.getLogger(OrderGUIService.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//    }
 
     private final Gson gson = new Gson();
     private final OrderAddGUI gui;
@@ -164,11 +100,11 @@ public class OrderGUIService {
         }
     }
 
-    public String addProduct(String productCode, String quantityText) {
+    public String addProduct(String serial,String productCode, String quantityText) {
         Future<String> future = executorService.submit(() -> {
             try {
                 // Create payload for HTTP request
-                String jsonPayload = customGson.toJson(Map.of("productCode", productCode, "quantity", quantityText));
+                String jsonPayload = customGson.toJson(Map.of("serial", serial,"productCode", productCode, "quantity", quantityText));
 
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
@@ -180,14 +116,15 @@ public class OrderGUIService {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
                 if (response.statusCode() == 200) {
-//                    double totalBill = customGson.fromJson(response.body(), Double.class);
-//                    gui.updateTotalBill("Total Bill: " + totalBill);
+                    double totalBill = customGson.fromJson(response.body(), Double.class);
+                    gui.updateTotalBill("Total Bill: " + totalBill);
                     gui.appendOrderSummary("Product added to the order: " + productCode + " - Quantity: " + quantityText + "\n");
                     gui.clearProductInputs();
                     return "Product added successfully!";
                 } else {
-                    gui.appendOrderSummary("Failed to add product. Response code: " + response.statusCode());
-                    return "Failed to add product.";
+                    String errorMessage = response.body(); // Get the error message from the response
+                    gui.appendOrderSummary("Failed to checkout. Error: " + errorMessage);
+                    return "Failed to checkout. Error: " + errorMessage;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -204,11 +141,11 @@ public class OrderGUIService {
         }
     }
 
-    public String checkout(String paymentType, String customerAmountText, String discountText) {
+    public String checkout(String serial, String paymentType, String customerAmountText, String discountText) {
         Future<String> future = executorService.submit(() -> {
             try {
                 // Create payload for HTTP request
-                String jsonPayload = customGson.toJson(Map.of("paymentType", paymentType, "customerAmount", customerAmountText, "discount", discountText));
+                String jsonPayload = customGson.toJson(Map.of("serial", serial,"paymentType", paymentType, "customerAmount", customerAmountText, "discount", discountText));
 
                 HttpClient client = HttpClient.newHttpClient();
                 HttpRequest request = HttpRequest.newBuilder()
@@ -220,11 +157,16 @@ public class OrderGUIService {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
                 if (response.statusCode() == 200) {
-                    gui.appendOrderSummary("Checkout completed.\n");
-                    return "Checkout completed successfully!";
+                    double balance = customGson.fromJson(response.body(), Double.class);
+                    gui.appendOrderSummary("Checkout completed.\n" +
+                            "Customer Amount: " + customerAmountText + "\n" +
+                            "Discount: " + discountText + "\n" +
+                            "Balance: " + balance + "\n");
+                    return "Checkout completed successfully! Balance: " + balance;
                 } else {
-                    gui.appendOrderSummary("Failed to checkout. Response code: " + response.statusCode());
-                    return "Failed to checkout.";
+                    String errorMessage = response.body(); // Get the error message from the response
+                    gui.appendOrderSummary("Failed to checkout. Error: " + errorMessage);
+                    return "Failed to checkout. Error: " + errorMessage;
                 }
             } catch (Exception e) {
                 e.printStackTrace();

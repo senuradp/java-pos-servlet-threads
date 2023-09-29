@@ -43,12 +43,12 @@ public class AddCommand implements Command {
                 shelfAddGUI.setVisible(true);
                 break;
             case "order":
-                OrderAddGUI orderAddGUI = new OrderAddGUI();
-                orderAddGUI.setVisible(true);
                 // Create a new batch header for this order
                 String orderSerial = orderService.createOrder();
                 // Do something with the orderSerial, perhaps pass it to the OrderAddGUI or log it
                 System.out.println("Created a new order with serial: " + orderSerial);
+                OrderAddGUI orderAddGUI = new OrderAddGUI(orderSerial);
+                orderAddGUI.setVisible(true);
 
                 break;
             default:

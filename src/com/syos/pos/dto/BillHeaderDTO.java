@@ -41,6 +41,7 @@ public class BillHeaderDTO {
         double sum = 0;
         
         for(int i=0; i<typeOfBillDetails.size(); i++){
+
             sum = sum + typeOfBillDetails.get(i).getTotal_item_price();
         }
         

@@ -20,8 +20,8 @@ public class MenuInvokerGUI extends JFrame {
     private JComboBox<String> entityComboBox;
     private JComboBox<String> operationComboBox;
     private JButton executeButton;
-    private String username, role;
-    OrderAddGUI guiInstance = new OrderAddGUI(); //new
+    private String username, role, serialNumber;
+    OrderAddGUI guiInstance = new OrderAddGUI(serialNumber);
 
     public MenuInvokerGUI(String username, String role) {
         this.username = username; 

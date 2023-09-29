@@ -18,19 +18,23 @@ public class OrderAddGUI extends JFrame {
     private JTextField discountField;
     private JTextArea orderSummaryArea;
     private JButton addProductButton;
+    JLabel serialLabel;
 
     private JLabel totalBillLabel; //new
     private final OrderGUIService guiService;
+    private static String orderSerial;
 
-    public OrderAddGUI() {
+    public OrderAddGUI(String orderSerial) {
+        this.orderSerial = orderSerial;
         this.guiService = new OrderGUIService(this);
         setTitle("Order Entry System");
         setSize(400, 400);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         initComponents();
     }
 
     private void initComponents() {
+        serialLabel = new JLabel(orderSerial);
         productCodeField = new JTextField(10);
         quantityField = new JTextField(10);
         paymentTypeField = new JTextField(10);
@@ -41,11 +45,13 @@ public class OrderAddGUI extends JFrame {
         addProductButton = new JButton("Add Product");
         JButton checkoutButton = new JButton("Checkout");
 
+        String serial = serialLabel.getText();
+
         addProductButton.addActionListener(e -> {
             String code = productCodeField.getText();
             String qty = quantityField.getText();
             if (validateInputs(code, qty)) {
-                guiService.addProduct(code, qty);
+                guiService.addProduct(serial,code, qty);
             } else {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields.");
             }
@@ -54,6 +60,7 @@ public class OrderAddGUI extends JFrame {
         checkoutButton.addActionListener(e -> {
             // You can add further validation here
             guiService.checkout(
+                    serial,
                     paymentTypeField.getText(),
                     customerAmountField.getText(),
                     discountField.getText()
@@ -61,6 +68,7 @@ public class OrderAddGUI extends JFrame {
         });
 
         JPanel productPanel = new JPanel();
+        productPanel.add(serialLabel);
         productPanel.add(new JLabel("Product Code: "));
         productPanel.add(productCodeField);
         productPanel.add(new JLabel("Quantity: "));
@@ -108,7 +116,7 @@ public class OrderAddGUI extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            new OrderAddGUI().setVisible(true);
+            new OrderAddGUI(orderSerial).setVisible(true);
         });
     }
 }

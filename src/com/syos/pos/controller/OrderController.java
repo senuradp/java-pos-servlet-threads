@@ -81,15 +81,16 @@ public class OrderController  extends HttpServlet {
 
                 try {
                     // Parse JSON directly without DTO
+                    String serial = customGson.fromJson(jsonData, JsonObject.class).get("serial").getAsString();
                     String productCode = customGson.fromJson(jsonData, JsonObject.class).get("productCode").getAsString();
                     double quantity = customGson.fromJson(jsonData, JsonObject.class).get("quantity").getAsDouble();
 
-                    double result = orderService.addOrderProduct(productCode, quantity);
+                    double result = orderService.addOrderProduct(serial,productCode, quantity);
                     out.print(customGson.toJson(result));
                 } catch (Exception ex) {
                     Logger.getLogger(OrderController.class.getName()).log(Level.SEVERE, null, ex);
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    out.print("An error occurred while processing the request.");
+                    out.print("Error: " + ex.getMessage());
                 }
             }
             else if ("checkout".equals(action)) {
@@ -102,18 +103,19 @@ public class OrderController  extends HttpServlet {
                 String jsonData = jsonBuffer.toString();
                 try {
                     JsonObject json = customGson.fromJson(jsonData, JsonObject.class);
+                    String serial = customGson.fromJson(jsonData, JsonObject.class).get("serial").getAsString();
                     String paymentType = json.get("paymentType").getAsString();
                     double customerAmount = json.get("customerAmount").getAsDouble();
                     double discount = json.get("discount").getAsDouble();
 
-                    orderService.addDiscount(discount);
-                    double balanceAmount = orderService.checkoutPay(customerAmount, paymentType);
+                    orderService.addDiscount(serial,discount);
+                    double balanceAmount = orderService.checkoutPay(serial,customerAmount, paymentType);
 //                    session.invalidate();
                     out.print(customGson.toJson(balanceAmount));
                 } catch (Exception ex) {
                     Logger.getLogger(OrderController.class.getName()).log(Level.SEVERE, null, ex);
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    out.print("An error occurred while processing the request.");
+                    out.print("Error: " + ex.getMessage());
                 }
             }
             else if ("createOrder".equals(action)) {
