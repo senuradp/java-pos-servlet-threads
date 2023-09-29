@@ -15,6 +15,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -127,20 +131,38 @@ public class MainMenuGUI extends JFrame {
 
                         if (date != null) { // Check if the user didn't cancel the input dialog
                             try {
-                                // Generate the Sales report as a single String
-                                String salesReport = report.getSalesReport().generateReportByDate(dateFormat.parse(date));
+                                // Construct the URL for the Sales Report API
+                                String apiUrl = "http://localhost:8080/syosposclientserver/ReportController?action=getSalesReport&date=" + date;
 
-                                // Create a JTextArea to display the report content
-                                JTextArea textArea = new JTextArea(20, 40);
-                                textArea.setEditable(false);
-                                textArea.setText(salesReport); // Set the report text
+                                // Create an HTTP client to make the GET request
+                                HttpClient client = HttpClient.newHttpClient();
+                                HttpRequest request = HttpRequest.newBuilder()
+                                        .uri(new URI(apiUrl))
+                                        .GET()
+                                        .build();
 
-                                // Create a JScrollPane for the JTextArea
-                                JScrollPane scrollPane = new JScrollPane(textArea);
+                                // Send the GET request and receive the response
+                                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                                // Show the report in a dialog
-                                JOptionPane.showMessageDialog(null, scrollPane, "Sales Report", JOptionPane.PLAIN_MESSAGE);
-                            } catch (ParseException ex) {
+                                if (response.statusCode() == 200) {
+                                    // Get the API response, which should contain the sales report
+                                    String salesReport = response.body();
+
+                                    // Create a JTextArea to display the report content
+                                    JTextArea textArea = new JTextArea(20, 40);
+                                    textArea.setEditable(false);
+                                    textArea.setText(salesReport); // Set the report text
+
+                                    // Create a JScrollPane for the JTextArea
+                                    JScrollPane scrollPane = new JScrollPane(textArea);
+
+                                    // Show the report in a dialog
+                                    JOptionPane.showMessageDialog(null, scrollPane, "Sales Report", JOptionPane.PLAIN_MESSAGE);
+                                } else {
+                                    // Handle HTTP errors if needed
+                                    JOptionPane.showMessageDialog(null, "Failed to retrieve the sales report. HTTP Error: " + response.statusCode());
+                                }
+                            } catch (Exception ex) {
                                 ex.printStackTrace();
                             }
                         } else {
@@ -148,27 +170,46 @@ public class MainMenuGUI extends JFrame {
                             JOptionPane.showMessageDialog(null, "Date input canceled by the user.");
                         }
 
-                    } else if ("Shelf report".equals(selectedSubmenu)) {
+                    }
+                    else if ("Shelf report".equals(selectedSubmenu)) {
 
-//                        // Get user input for date using a dialog
+    //                        // Get user input for date using a dialog
                         String date = JOptionPane.showInputDialog(null, "Enter date in yyyy-MM-dd format:");
 
                         if (date != null) { // Check if the user didn't cancel the input dialog
                             try {
-                                // Generate the Shelf report as a single String
-                                String shelfReport = report.getShelfReport().generateReportByDate(dateFormat.parse(date));;
+                                // Construct the URL for the Sales Report API
+                                String apiUrl = "http://localhost:8080/syosposclientserver/ReportController?action=getShelfReport&date=" + date;
 
-                                // Create a JTextArea to display the report content
-                                JTextArea textArea = new JTextArea(20, 40);
-                                textArea.setEditable(false);
-                                textArea.setText(shelfReport); // Set the report text
+                                // Create an HTTP client to make the GET request
+                                HttpClient client = HttpClient.newHttpClient();
+                                HttpRequest request = HttpRequest.newBuilder()
+                                        .uri(new URI(apiUrl))
+                                        .GET()
+                                        .build();
 
-                                // Create a JScrollPane for the JTextArea
-                                JScrollPane scrollPane = new JScrollPane(textArea);
+                                // Send the GET request and receive the response
+                                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                                // Show the report in a dialog
-                                JOptionPane.showMessageDialog(null, scrollPane, "Shelf Report", JOptionPane.PLAIN_MESSAGE);
-                            } catch (ParseException ex) {
+                                if (response.statusCode() == 200) {
+                                    // Get the API response, which should contain the sales report
+                                    String shelfReport = response.body();
+
+                                    // Create a JTextArea to display the report content
+                                    JTextArea textArea = new JTextArea(20, 40);
+                                    textArea.setEditable(false);
+                                    textArea.setText(shelfReport); // Set the report text
+
+                                    // Create a JScrollPane for the JTextArea
+                                    JScrollPane scrollPane = new JScrollPane(textArea);
+
+                                    // Show the report in a dialog
+                                    JOptionPane.showMessageDialog(null, scrollPane, "Shelf Report", JOptionPane.PLAIN_MESSAGE);
+                                } else {
+                                    // Handle HTTP errors if needed
+                                    JOptionPane.showMessageDialog(null, "Failed to retrieve the sales report. HTTP Error: " + response.statusCode());
+                                }
+                            } catch (Exception ex) {
                                 ex.printStackTrace();
                             }
                         } else {
@@ -176,47 +217,84 @@ public class MainMenuGUI extends JFrame {
                             JOptionPane.showMessageDialog(null, "Date input canceled by the user.");
                         }
 
-                    } else if ("Stock report".equals(selectedSubmenu)) {
-                        
+                    }
+                    else if ("Stock report".equals(selectedSubmenu)) {
                         try {
-                            // Generate the Stock report as a single String
-                            String stockReport = report.getStockReport().generateReport();;
+                            // Construct the URL for the Sales Report API
+                            String apiUrl = "http://localhost:8080/syosposclientserver/ReportController?action=getStockReport";
 
-                            // Create a JTextArea to display the report content
-                            JTextArea textArea = new JTextArea(20, 40);
-                            textArea.setEditable(false);
-                            textArea.setText(stockReport); // Set the report text
+                            // Create an HTTP client to make the GET request
+                            HttpClient client = HttpClient.newHttpClient();
+                            HttpRequest request = HttpRequest.newBuilder()
+                                    .uri(new URI(apiUrl))
+                                    .GET()
+                                    .build();
 
-                            // Create a JScrollPane for the JTextArea
-                            JScrollPane scrollPane = new JScrollPane(textArea);
+                            // Send the GET request and receive the response
+                            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                            // Show the report in a dialog
-                            JOptionPane.showMessageDialog(null, scrollPane, "Stock Report", JOptionPane.PLAIN_MESSAGE);
+                            if (response.statusCode() == 200) {
+                                // Get the API response, which should contain the sales report
+                                String stockReport = response.body();
+
+                                // Create a JTextArea to display the report content
+                                JTextArea textArea = new JTextArea(20, 40);
+                                textArea.setEditable(false);
+                                textArea.setText(stockReport); // Set the report text
+
+                                // Create a JScrollPane for the JTextArea
+                                JScrollPane scrollPane = new JScrollPane(textArea);
+
+                                // Show the report in a dialog
+                                JOptionPane.showMessageDialog(null, scrollPane, "Stock Report", JOptionPane.PLAIN_MESSAGE);
+                            } else {
+                                // Handle HTTP errors if needed
+                                JOptionPane.showMessageDialog(null, "Failed to retrieve the sales report. HTTP Error: " + response.statusCode());
+                            }
                         } catch (Exception ex) {
                             ex.printStackTrace();
                         }
-                        
-                    } else if ("Bill report".equals(selectedSubmenu)) {
-                        
+
+                    }
+                    else if ("Bill report".equals(selectedSubmenu)) {
                         try {
-                            // Generate the Bill report as a single String
-                            String billReport = report.getBillReport().generateReport();
+                            // Construct the URL for the Sales Report API
+                            String apiUrl = "http://localhost:8080/syosposclientserver/ReportController?action=getBillReport";
 
-                            // Create a JTextArea to display the report content
-                            JTextArea textArea = new JTextArea(20, 40);
-                            textArea.setEditable(false);
-                            textArea.setText(billReport); // Set the report text
+                            // Create an HTTP client to make the GET request
+                            HttpClient client = HttpClient.newHttpClient();
+                            HttpRequest request = HttpRequest.newBuilder()
+                                    .uri(new URI(apiUrl))
+                                    .GET()
+                                    .build();
 
-                            // Create a JScrollPane for the JTextArea
-                            JScrollPane scrollPane = new JScrollPane(textArea);
+                            // Send the GET request and receive the response
+                            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                            // Show the report in a dialog
-                            JOptionPane.showMessageDialog(null, scrollPane, "Bill Report", JOptionPane.PLAIN_MESSAGE);
+                            if (response.statusCode() == 200) {
+                                // Get the API response, which should contain the sales report
+                                String billReport = response.body();
+
+                                // Create a JTextArea to display the report content
+                                JTextArea textArea = new JTextArea(20, 40);
+                                textArea.setEditable(false);
+                                textArea.setText(billReport); // Set the report text
+
+                                // Create a JScrollPane for the JTextArea
+                                JScrollPane scrollPane = new JScrollPane(textArea);
+
+                                // Show the report in a dialog
+                                JOptionPane.showMessageDialog(null, scrollPane, "Bill Report", JOptionPane.PLAIN_MESSAGE);
+                            } else {
+                                // Handle HTTP errors if needed
+                                JOptionPane.showMessageDialog(null, "Failed to retrieve the sales report. HTTP Error: " + response.statusCode());
+                            }
                         } catch (Exception ex) {
                             ex.printStackTrace();
                         }
-                        
-                    } else {
+
+                    }
+                    else {
                         JOptionPane.showMessageDialog(null, "Invalid report choice. Please try again.");
                     }
 

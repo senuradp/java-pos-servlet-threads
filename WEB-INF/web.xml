@@ -39,4 +39,13 @@
         <url-pattern>/OrderController</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ReportController</servlet-name>
+        <servlet-class>com.syos.pos.controller.ReportController</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReportController</servlet-name>
+        <url-pattern>/ReportController</url-pattern>
+    </servlet-mapping>
+
 </web-app>
