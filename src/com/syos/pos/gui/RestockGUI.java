@@ -28,7 +28,7 @@ public class RestockGUI extends JFrame {
     public RestockGUI() {
         setTitle("Restock Shelf");
         setSize(400, 300);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // Create components
         JLabel productCodeLabel = new JLabel("Enter product code:");

@@ -28,8 +28,8 @@ public class OrderAddGUI extends JFrame {
         this.orderSerial = orderSerial;
         this.guiService = new OrderGUIService(this);
         setTitle("Order Entry System");
-        setSize(400, 400);
-//        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1200, 300);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         initComponents();
     }
 

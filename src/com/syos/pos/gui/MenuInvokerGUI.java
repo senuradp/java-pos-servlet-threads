@@ -29,7 +29,7 @@ public class MenuInvokerGUI extends JFrame {
         
         setTitle("Menu Invoker " +username + role);
         setSize(400, 200);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // Create a panel to hold the form components
         JPanel panel = new JPanel();
