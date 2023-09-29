@@ -25,8 +25,10 @@ import java.util.Scanner;
  *
  * @author senu2k
  */
+
+import java.util.concurrent.locks.ReentrantLock;
 public class OrderService {
-    
+
     private static final IProductService productService = (IProductService) ServiceFactory.getInstance().getDAO(ServiceFactory.ServiceType.PRODUCT);
     private static final IShelfService shelfService = (IShelfService) ServiceFactory.getInstance().getDAO(ServiceFactory.ServiceType.SHELF);
     private static final IBillHeaderService billHeaderService = (IBillHeaderService) ServiceFactory.getInstance().getDAO(ServiceFactory.ServiceType.BILL_HEADER);
@@ -37,8 +39,8 @@ public class OrderService {
     private final BillDetailDTO billDetailDTO;
 //    private BillHeaderDTO billHeaderDTO;
 //    private BillDetailDTO billDetailDTO;
+    private static final ReentrantLock lock = new ReentrantLock();
 
-    
     private OrderService() {
         this.billHeaderDTO = new BillHeaderDTO();
         this.billDetailDTO = new BillDetailDTO();
@@ -52,35 +54,47 @@ public class OrderService {
     }
 
     public String createOrder() {
+        lock.lock();
+        try {
+            Date currentDate = new Date();
 
-        Date currentDate = new Date();
+    //        billHeaderDTO = new BillHeaderDTO();
+            billHeaderDTO.setBill_serial_number(generateSerialNumber());
+            billHeaderDTO.setDate(currentDate);
 
-//        billHeaderDTO = new BillHeaderDTO();
-        billHeaderDTO.setBill_serial_number(generateSerialNumber());
-        billHeaderDTO.setDate(currentDate);
+            // Reset the total bill price for the new order
+            billHeaderDTO.setTotal_bill_price(0.0);
 
-        return billHeaderDTO.getBill_serial_number();
+            return billHeaderDTO.getBill_serial_number();
+        } finally {
+            lock.unlock();
+        }
     }
 
     public double addOrderProduct(String product_code, double qty) throws Exception {
-        double total_price = 0;
+        lock.lock();
+        try {
+            double total_price = 0;
 
-        // productService.get // product by code (this gives the name and price and
-        // thers and pass to th blow function)
-        // productService.getProductByCode(product_code);
+            // productService.get // product by code (this gives the name and price and
+            // thers and pass to th blow function)
+            // productService.getProductByCode(product_code);
 
-        ProductDTO product = productService.getProductByCode(product_code);
+            ProductDTO product = productService.getProductByCode(product_code);
 
-        if(product == null) {
-            throw new Exception("Product with code " + product_code + " not found.");
+            if(product == null) {
+                throw new Exception("Product with code " + product_code + " not found.");
+            }
+
+            String productName = product.getProduct_name();
+            double price = product.getProduct_price();
+
+            billHeaderDTO.addProduct(product_code, productName, qty, price);
+
+            return billHeaderDTO.getTotal_bill_price();
+        } finally {
+            lock.unlock();
         }
-
-        String productName = product.getProduct_name();
-        double price = product.getProduct_price();
-        
-        billHeaderDTO.addProduct(product_code, productName, qty, price);
-
-        return billHeaderDTO.getTotal_bill_price();
     }
 
     public double addDiscount(double discount_amount) {
@@ -172,7 +186,7 @@ public class OrderService {
 
     public double calculateBalancePay(double amount_tendered) {
         double balance = 0;
-        
+
         balance = amount_tendered - billHeaderDTO.getTotal_bill_price();
 
         return balance;

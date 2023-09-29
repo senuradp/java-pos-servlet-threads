@@ -21,6 +21,7 @@ public class MenuInvokerGUI extends JFrame {
     private JComboBox<String> operationComboBox;
     private JButton executeButton;
     private String username, role;
+    OrderAddGUI guiInstance = new OrderAddGUI(); //new
 
     public MenuInvokerGUI(String username, String role) {
         this.username = username; 
@@ -59,7 +60,8 @@ public class MenuInvokerGUI extends JFrame {
                 BatchGUIService batchService = new BatchGUIService();
                 ProductGUIService productService = new ProductGUIService();
                 ShelfGUIService shelfService = new ShelfGUIService();
-                OrderServiceMenu orderService = new OrderServiceMenu();
+//                OrderGUIService orderService = new OrderGUIService();
+                OrderGUIService orderService = new OrderGUIService(guiInstance);
 
                 // Execute the command based on the selected entity and operation
                 switch (selectedOperation.toLowerCase()) {

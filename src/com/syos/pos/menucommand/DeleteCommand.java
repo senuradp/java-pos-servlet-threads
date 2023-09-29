@@ -17,10 +17,10 @@ public class DeleteCommand implements Command {
     private final BatchGUIService batchService;
     private final ProductGUIService productService;
     private final ShelfGUIService shelfService;
-    private final OrderServiceMenu orderService;
+    private final OrderGUIService orderService;
     String entity; // package-private access
 
-    public DeleteCommand(String entity, BatchGUIService batchService, ProductGUIService productService, ShelfGUIService shelfService, OrderServiceMenu orderService) {
+    public DeleteCommand(String entity, BatchGUIService batchService, ProductGUIService productService, ShelfGUIService shelfService, OrderGUIService orderService) {
         this.entity = entity;
         this.batchService = batchService;
         this.productService = productService;

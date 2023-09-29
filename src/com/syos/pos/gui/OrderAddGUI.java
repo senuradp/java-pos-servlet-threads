@@ -1,46 +1,29 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.syos.pos.gui;
 
-
-import com.syos.pos.controller.ProductController;
-import com.syos.pos.menucommand.OrderServiceMenu;
-import com.syos.pos.menucommand.ProductGUIService;
-import com.syos.pos.service.OrderService;
+import com.syos.pos.menucommand.OrderGUIService;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author senu2k
  */
-
 public class OrderAddGUI extends JFrame {
+
     private JTextField productCodeField;
     private JTextField quantityField;
     private JTextField paymentTypeField;
     private JTextField customerAmountField;
     private JTextField discountField;
     private JTextArea orderSummaryArea;
-
     private JButton addProductButton;
 
-    private ProductGUIService productGUIService;
-    private OrderService orderService;
+    private JLabel totalBillLabel; //new
+    private final OrderGUIService guiService;
 
     public OrderAddGUI() {
-        productGUIService = new ProductGUIService();
-        orderService = OrderService.getInstance();
-        orderService.createOrder();
-
+        this.guiService = new OrderGUIService(this);
         setTitle("Order Entry System");
         setSize(400, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -48,7 +31,6 @@ public class OrderAddGUI extends JFrame {
     }
 
     private void initComponents() {
-        // Create and configure Swing components (text fields, buttons, etc.)
         productCodeField = new JTextField(10);
         quantityField = new JTextField(10);
         paymentTypeField = new JTextField(10);
@@ -59,28 +41,33 @@ public class OrderAddGUI extends JFrame {
         addProductButton = new JButton("Add Product");
         JButton checkoutButton = new JButton("Checkout");
 
-        // Create action listeners for buttons
-        addProductButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addProduct();
+        addProductButton.addActionListener(e -> {
+            String code = productCodeField.getText();
+            String qty = quantityField.getText();
+            if (validateInputs(code, qty)) {
+                guiService.addProduct(code, qty);
+            } else {
+                JOptionPane.showMessageDialog(this, "Please fill in all fields.");
             }
         });
 
-        checkoutButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                checkout();
-            }
+        checkoutButton.addActionListener(e -> {
+            // You can add further validation here
+            guiService.checkout(
+                    paymentTypeField.getText(),
+                    customerAmountField.getText(),
+                    discountField.getText()
+            );
         });
 
-        // Create panels to organize components
         JPanel productPanel = new JPanel();
         productPanel.add(new JLabel("Product Code: "));
         productPanel.add(productCodeField);
         productPanel.add(new JLabel("Quantity: "));
         productPanel.add(quantityField);
         productPanel.add(addProductButton);
+        productPanel.add(new JLabel("Total Bill: "));
+        productPanel.add(totalBillLabel = new JLabel("0.00"));
 
         JPanel paymentPanel = new JPanel();
         paymentPanel.add(new JLabel("Payment Type: "));
@@ -91,71 +78,37 @@ public class OrderAddGUI extends JFrame {
         paymentPanel.add(discountField);
         paymentPanel.add(checkoutButton);
 
-        // Set layout for the main frame
         setLayout(new BorderLayout());
-
-        // Add components to the main frame
-        add(productPanel, BorderLayout.NORTH);
+        JPanel topPanel = new JPanel(new GridLayout(2, 1));
+        topPanel.add(productPanel);
+        topPanel.add(paymentPanel);
+        add(topPanel, BorderLayout.NORTH);
         add(new JScrollPane(orderSummaryArea), BorderLayout.CENTER);
-        add(paymentPanel, BorderLayout.SOUTH);
     }
 
-    private void addProduct() {
-        try {
-            String productCode = productCodeField.getText();
-            double quantity = Double.parseDouble(quantityField.getText());
-
-            // Check if the product code exists
-            boolean productCodeExists = productGUIService.checkProductCodeExists(productCode);
-
-            if (!productCodeExists) {
-                JOptionPane.showMessageDialog(this, "Product code does not exist!");
-                return;
-            }
-
-
-            orderService.addOrderProduct(productCode, quantity);
-            orderSummaryArea.append("Product added to the order: " + productCode + " - Quantity: " + quantity + "\n");
-
-            // Clear input fields
-            productCodeField.setText("");
-            quantityField.setText("");
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Invalid quantity. Please enter a number.");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private boolean validateInputs(String code, String qty) {
+        return !(code == null || code.isEmpty() || qty == null || qty.isEmpty());
     }
 
-    private void checkout() {
-        try {
-            addProductButton.setEnabled(false);
-            String paymentType = paymentTypeField.getText();
-            double customerAmount = Double.parseDouble(customerAmountField.getText());
-            double discount = Double.parseDouble(discountField.getText());
+    public void appendOrderSummary(String summary) {
+        orderSummaryArea.append(summary);
+    }
 
-            orderService.addDiscount(discount);
-            double balanceAmount = orderService.checkoutPay(customerAmount, paymentType);
+    public void updateTotalBill(String totalBill) {
+        // Update the total bill display in the GUI
+        // This will depend on how you've implemented your GUI
+        // For example, if you have a JLabel for this:
+        totalBillLabel.setText(totalBill);
+    }
 
-            orderSummaryArea.append("Balance: " + balanceAmount + "\n");
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Invalid input. Please enter valid numbers.");
-        } catch (Exception ex) {
-            if (ex.getMessage().contains("Amount tendered is less than total bill price.")) {
-                JOptionPane.showMessageDialog(this, ex.getMessage());
-            } else {
-                Logger.getLogger(OrderServiceMenu.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
+    public void clearProductInputs() {
+        productCodeField.setText("");
+        quantityField.setText("");
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new OrderAddGUI().setVisible(true);
-            }
+        SwingUtilities.invokeLater(() -> {
+            new OrderAddGUI().setVisible(true);
         });
     }
 }
-

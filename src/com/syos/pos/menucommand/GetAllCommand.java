@@ -13,10 +13,10 @@ public class GetAllCommand implements Command {
     private final BatchGUIService batchService;
     private final ProductGUIService productService;
     private final ShelfGUIService shelfService;
-    private final OrderServiceMenu orderService;
+    private final OrderGUIService orderService;
     String entity; // package-private access
 
-    GetAllCommand(BatchGUIService batchService, ProductGUIService productService, ShelfGUIService shelfService, OrderServiceMenu orderService) {
+    GetAllCommand(BatchGUIService batchService, ProductGUIService productService, ShelfGUIService shelfService, OrderGUIService orderService) {
         this.batchService = batchService;
         this.productService = productService;
         this.shelfService = shelfService;

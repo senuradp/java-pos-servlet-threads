@@ -27,7 +27,7 @@ public class MenuSystem {
 //        BatchGUIService batchService = new BatchGUIService();
 //        ProductGUIService productService = new ProductGUIService();
 //        ShelfGUIService shelfService = new ShelfGUIService();
-//        OrderServiceMenu orderService = new OrderServiceMenu();
+//        OrderGUIService orderService = new OrderGUIService();
 //
 //        MenuInvoker invoker = new MenuInvoker(batchService, productService, shelfService, orderService);
 //

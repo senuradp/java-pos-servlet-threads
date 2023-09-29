@@ -15,10 +15,10 @@ public class AddCommand implements Command {
     private final BatchGUIService batchService;
     private final ProductGUIService productService;
     private final ShelfGUIService shelfService;
-    private final OrderServiceMenu orderService;
+    private final OrderGUIService orderService;
     String entity; // package-private access
 
-    public AddCommand(String entity, BatchGUIService batchService, ProductGUIService productService, ShelfGUIService shelfService, OrderServiceMenu orderService) {
+    public AddCommand(String entity, BatchGUIService batchService, ProductGUIService productService, ShelfGUIService shelfService, OrderGUIService orderService) {
         this.entity = entity;
         this.batchService = batchService;
         this.productService = productService;
@@ -43,8 +43,13 @@ public class AddCommand implements Command {
                 shelfAddGUI.setVisible(true);
                 break;
             case "order":
-//                OrderAddGUI orderAddGUI = new OrderAddGUI(orderService);
-//                orderAddGUI.setVisible(true);
+                OrderAddGUI orderAddGUI = new OrderAddGUI();
+                orderAddGUI.setVisible(true);
+                // Create a new batch header for this order
+                String orderSerial = orderService.createOrder();
+                // Do something with the orderSerial, perhaps pass it to the OrderAddGUI or log it
+                System.out.println("Created a new order with serial: " + orderSerial);
+
                 break;
             default:
                 System.out.println("Invalid entity!");
